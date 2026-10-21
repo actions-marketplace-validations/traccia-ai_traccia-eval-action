@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "exit_code": 2,
+  "code": "baseline_missing",
+  "label": "Failed",
+  "quality_gate": false,
+  "failures": [{"code": "baseline_missing", "message": "The production version of support-reply has no attached experiment"}]
+}

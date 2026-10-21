@@ -1,0 +1,35 @@
+# Copy to .github/workflows/evals.yml in your repository.
+# Requires the repository secret TRACCIA_API_KEY.
+name: Evals
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write # lets the action post the result comment
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: evals-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt # must include traccia
+
+      - uses: traccia-ai/traccia-eval-action@v1
+        with:
+          command: >-
+            traccia eval evals/support_agent.py
+            --dataset support-golden
+            --scorer exact_match
+            --min-pass-rate 0.9
+            --output summary.json
+        env:
+          TRACCIA_API_KEY: ${{ secrets.TRACCIA_API_KEY }}

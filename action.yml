@@ -1,0 +1,83 @@
+name: Traccia Eval
+description: Gate pull requests on a Traccia eval and post the result as a pull request comment.
+author: Traccia
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  command:
+    description: >-
+      The eval command, for example `traccia eval evals/agent.py --dataset golden --scorer exact_match
+      --min-pass-rate 0.9 --output summary.json`. Install the SDK in an earlier step; this action does not
+      install it. For TypeScript use `npx --no-install traccia-ts eval ...`.
+    required: true
+  summary:
+    description: Path of the summary file. Must match the command's `--output`. Relative to `working_directory`.
+    required: false
+    default: summary.json
+  working_directory:
+    description: Directory to run the command in. Defaults to the workspace root.
+    required: false
+    default: ""
+  comment:
+    description: Post or update a pull request comment with the result. `true` or `false`.
+    required: false
+    default: "true"
+  comment_key:
+    description: >-
+      Identifies this job's comment so later runs update it instead of posting a new one. Defaults to the
+      workflow, job, and ref. In a matrix, include the matrix value.
+    required: false
+    default: ""
+  github_token:
+    description: "Token used to post the comment. Needs `pull-requests: write`."
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  exit_code:
+    description: "The eval exit code: 0 pass, 1 below the bar, 2 bad command or baseline, 3 untrustworthy run, 4 not saved, 5 no valid summary."
+    value: ${{ steps.eval.outputs.exit_code }}
+  code:
+    description: The first failure code, such as `regression`. Empty on a pass.
+    value: ${{ steps.eval.outputs.code }}
+  label:
+    description: "`Quality Gate`, `Execution Only`, or `Failed`."
+    value: ${{ steps.eval.outputs.label }}
+  quality_gate:
+    description: "`true` only when a pass-rate bar was set and the run passed it."
+    value: ${{ steps.eval.outputs.quality_gate }}
+  experiment_id:
+    description: Id of the saved experiment.
+    value: ${{ steps.eval.outputs.experiment_id }}
+  experiment_url:
+    description: Link to the experiment in Traccia.
+    value: ${{ steps.eval.outputs.experiment_url }}
+  summary_path:
+    description: Absolute path of the summary file, for uploading as an artifact.
+    value: ${{ steps.eval.outputs.summary_path }}
+  comment_posted:
+    description: "`true` when the pull request comment was created or updated."
+    value: ${{ steps.eval.outputs.comment_posted }}
+
+runs:
+  using: composite
+  steps:
+    - id: eval
+      name: Run Traccia eval
+      shell: bash
+      env:
+        # Inputs and event fields reach the script only as environment variables,
+        # never interpolated into it, so they cannot inject shell code.
+        TRACCIA_EVAL_COMMAND: ${{ inputs.command }}
+        TRACCIA_EVAL_SUMMARY: ${{ inputs.summary }}
+        TRACCIA_EVAL_WORKING_DIRECTORY: ${{ inputs.working_directory }}
+        TRACCIA_EVAL_COMMENT: ${{ inputs.comment }}
+        TRACCIA_EVAL_COMMENT_KEY: ${{ inputs.comment_key }}
+        TRACCIA_EVAL_GITHUB_TOKEN: ${{ inputs.github_token }}
+        GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        GITHUB_HEAD_REF: ${{ github.head_ref }}
+        GITHUB_BASE_REF: ${{ github.base_ref }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: bash "$GITHUB_ACTION_PATH/run.sh"

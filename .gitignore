@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.DS_Store
+summary.json
+tests/_comment.md

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "exit_code": 1,
+  "code": "regression",
+  "label": "Failed",
+  "quality_gate": false,
+  "failures": [{"code": "regression", "message": "exact_match dropped more than allowed"}],
+  "gates": {"max_drop": 0.05, "baseline_experiment_id": "8c1d77e2-5b0a-4c55-9d1e-0a4b2f6c3e11"},
+  "experiment_id": "0f6e2a54-9a1c-4f0e-8c3a-2d7b5e1c9a40",
+  "url": "https://app.traccia.ai/experiments/0f6e2a54-9a1c-4f0e-8c3a-2d7b5e1c9a40",
+  "dataset_fingerprint": "a41f9c0e7b2d",
+  "dataset_verified": true,
+  "scorers": [
+    {"name": "exact_match", "expected": 50, "completed": 50, "missing": 0, "errored": 0, "duplicate": 0, "passes": 42, "pass_rate": 0.84, "baseline_pass_rate": 0.9, "informational": false}
+  ]
+}

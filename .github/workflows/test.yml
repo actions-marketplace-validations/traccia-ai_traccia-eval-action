@@ -1,0 +1,71 @@
+# Offline checks. No secrets, no network beyond a local fake GitHub API.
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.10", "3.13"]
+        exclude:
+          - os: macos-latest
+            python: "3.10"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s tests -v
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: shellcheck run.sh
+      - name: actionlint
+        run: |
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
+          ./actionlint -color
+
+  # Runs the action from this checkout the way a user's workflow would.
+  self-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: run
+        uses: ./
+        with:
+          command: cp tests/fixtures/quality_gate_pass.json summary.json
+          comment: "false"
+      - name: Check outputs
+        env:
+          EXIT: ${{ steps.run.outputs.exit_code }}
+          LABEL: ${{ steps.run.outputs.label }}
+        run: |
+          test "$EXIT" = "0"
+          test "$LABEL" = "Quality Gate"
+      - id: miss
+        continue-on-error: true
+        uses: ./
+        with:
+          command: cp tests/fixtures/regression.json miss.json && exit 1
+          summary: miss.json
+          comment: "false"
+      - name: Check the failure path
+        env:
+          EXIT: ${{ steps.miss.outputs.exit_code }}
+          CODE: ${{ steps.miss.outputs.code }}
+        run: |
+          test "$EXIT" = "1"
+          test "$CODE" = "regression"

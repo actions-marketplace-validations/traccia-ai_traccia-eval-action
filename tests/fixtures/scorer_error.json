@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "exit_code": 3,
+  "code": "scorer_error",
+  "label": "Failed",
+  "quality_gate": false,
+  "failures": [{"code": "scorer_error", "message": "faithfulness errored on 3 rows"}],
+  "gates": {"min_pass_rate": 0.9},
+  "experiment_id": "0f6e2a54-9a1c-4f0e-8c3a-2d7b5e1c9a40",
+  "url": "https://app.traccia.ai/experiments/0f6e2a54-9a1c-4f0e-8c3a-2d7b5e1c9a40",
+  "scorers": [
+    {"name": "faithfulness", "expected": 50, "completed": 47, "missing": 0, "errored": 3, "duplicate": 0, "passes": 40, "pass_rate": null, "informational": false}
+  ]
+}

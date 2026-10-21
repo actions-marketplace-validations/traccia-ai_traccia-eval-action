@@ -1,0 +1,45 @@
+# The same gate without this action. The CLI's exit code fails the job.
+# You lose the pull request comment; everything else is the same.
+name: Evals
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+
+      - name: Run evals
+        env:
+          TRACCIA_API_KEY: ${{ secrets.TRACCIA_API_KEY }}
+          # Optional: show the commit and pull request on the experiment.
+          TRACCIA_GIT_GITHUB_SHA: ${{ github.sha }}
+          TRACCIA_GIT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          TRACCIA_GIT_HEAD_REF: ${{ github.head_ref }}
+          TRACCIA_GIT_BASE_REF: ${{ github.base_ref }}
+          TRACCIA_PR_NUMBER: ${{ github.event.pull_request.number }}
+          TRACCIA_GIT_REPOSITORY: ${{ github.repository }}
+          TRACCIA_GIT_ACTOR: ${{ github.actor }}
+        run: |
+          export TRACCIA_GIT_CHECKOUT_SHA="$(git rev-parse HEAD)"
+          traccia eval evals/support_agent.py \
+            --dataset support-golden \
+            --scorer exact_match \
+            --min-pass-rate 0.9 \
+            --output summary.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-summary
+          path: summary.json

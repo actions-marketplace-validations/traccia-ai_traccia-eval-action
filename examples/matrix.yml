@@ -1,0 +1,46 @@
+# One eval per model. Each matrix leg keeps its own pull request comment
+# because comment_key includes the matrix value.
+name: Evals
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [gpt-5.1, claude-sonnet-5-5]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+
+      - id: eval
+        uses: traccia-ai/traccia-eval-action@v1
+        with:
+          command: >-
+            traccia eval evals/support_agent.py
+            --dataset support-golden
+            --scorer exact_match
+            --min-pass-rate 0.9
+            --name "support agent · ${{ matrix.model }}"
+            --output summary.json
+          comment_key: support-${{ matrix.model }}
+        env:
+          TRACCIA_API_KEY: ${{ secrets.TRACCIA_API_KEY }}
+          MODEL: ${{ matrix.model }} # read by your task
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-summary-${{ matrix.model }}
+          path: ${{ steps.eval.outputs.summary_path }}

@@ -1,0 +1,36 @@
+# Fail the pull request when quality drops more than 5 points, or cost rises more
+# than 20 percent, compared with the experiment attached to the production prompt.
+# See https://traccia.ai/docs/guides/ci-evals/#baseline for the one-time setup.
+name: Evals
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+
+      - uses: traccia-ai/traccia-eval-action@v1
+        with:
+          command: >-
+            traccia eval evals/support_agent.py
+            --dataset support-golden
+            --scorer exact_match --scorer faithfulness
+            --prompt support-reply --prompt-label production
+            --baseline-prompt support-reply
+            --max-drop 0.05
+            --max-task-cost-increase 0.2
+            --output summary.json
+        env:
+          TRACCIA_API_KEY: ${{ secrets.TRACCIA_API_KEY }}

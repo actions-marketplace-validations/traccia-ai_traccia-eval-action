@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "exit_code": 0,
+  "code": null,
+  "label": "Quality Gate",
+  "quality_gate": true,
+  "failures": [],
+  "gates": {"min_pass_rate": 0.9},
+  "experiment_id": "0f6e2a54-9a1c-4f0e-8c3a-2d7b5e1c9a40",
+  "url": "https://app.traccia.ai/experiments/0f6e2a54-9a1c-4f0e-8c3a-2d7b5e1c9a40",
+  "dataset_fingerprint": "a41f9c0e7b2d",
+  "dataset_verified": true,
+  "scorers": [
+    {"name": "exact_match", "expected": 50, "completed": 50, "missing": 0, "errored": 0, "duplicate": 0, "passes": 47, "pass_rate": 0.94, "informational": false},
+    {"name": "tone", "expected": 50, "completed": 50, "missing": 0, "errored": 0, "duplicate": 0, "passes": 30, "pass_rate": 0.6, "informational": true}
+  ]
+}
